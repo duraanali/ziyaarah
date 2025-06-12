@@ -29,6 +29,11 @@ const nextConfig = {
       },
     ];
   },
+
+  // Configure experimental features
+  experimental: {
+    serverActions: true,
+  },
 };
 
 export default nextConfig;
