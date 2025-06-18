@@ -1,6 +1,4 @@
-# Ziyaarah API
-
-A RESTful API for managing Umrah and Hajj trips. This API provides endpoints for creating and managing trips, handling trip members, tracking checkpoints, and managing packing lists.
+# Ziyaarah API Documentation
 
 ## Base URL
 
@@ -10,19 +8,17 @@ https://ziyaarah.vercel.app
 
 ## Authentication
 
-All API endpoints require authentication using a JWT token in the Authorization header:
+All endpoints require authentication using a Bearer token in the Authorization header:
 
 ```
-Authorization: Bearer your-token-here
+Authorization: Bearer <token>
 ```
 
-## API Endpoints
-
-### Authentication
+### Authentication Endpoints
 
 #### Register User
 
-```http
+```
 POST /api/auth/register
 ```
 
@@ -45,7 +41,7 @@ Response:
 
 #### Login User
 
-```http
+```
 POST /api/auth/login
 ```
 
@@ -67,7 +63,7 @@ Response:
 
 #### Get Current User
 
-```http
+```
 GET /api/auth/me
 ```
 
@@ -77,270 +73,576 @@ Response:
 - 401 Unauthorized: Invalid or missing token
 - 500 Internal Server Error: Server error
 
+## API Endpoints
+
 ### Trips
 
-#### Create Trip
+#### List Trips
 
-```http
-POST /api/trips
 ```
-
-Request Body:
-
-```json
-{
-  "name": "string",
-  "start_date": "string (YYYY-MM-DD)",
-  "end_date": "string (YYYY-MM-DD)"
-}
-```
-
-Response:
-
-- 201 Created: Returns created trip
-- 400 Bad Request: Missing required fields
-- 401 Unauthorized: Invalid token
-- 500 Internal Server Error: Server error
-
-#### Get All Trips
-
-```http
 GET /api/trips
 ```
 
+Returns a list of all trips the authenticated user is a member of.
+
 Response:
 
-- 200 OK: Returns array of trips
-- 401 Unauthorized: Invalid token
-- 500 Internal Server Error: Server error
-
-#### Get Trip by ID
-
-```http
-GET /api/trips/:id
+```json
+[
+  {
+    "id": "trip123",
+    "name": "Umrah 2024",
+    "start_date": "2024-03-01",
+    "end_date": "2024-03-15",
+    "group_code": "ZIYAA20240001",
+    "created_at": 1709251200000,
+    "created_by": "user123"
+  }
+]
 ```
 
+#### Get Trip
+
+```
+GET /api/trips/[tripId]
+```
+
+Returns details of a specific trip.
+
 Response:
 
-- 200 OK: Returns trip details
-- 404 Not Found: Trip not found
-- 401 Unauthorized: Invalid token
-- 500 Internal Server Error: Server error
+```json
+{
+  "id": "trip123",
+  "name": "Umrah 2024",
+  "start_date": "2024-03-01",
+  "end_date": "2024-03-15",
+  "group_code": "ZIYAA20240001",
+  "created_at": 1709251200000,
+  "created_by": "user123"
+}
+```
+
+#### Create Trip
+
+```
+POST /api/trips
+```
+
+Creates a new trip.
+
+Request Body:
+
+```json
+{
+  "name": "Umrah 2024",
+  "start_date": "2024-03-01",
+  "end_date": "2024-03-15"
+}
+```
+
+Response: Created trip object
 
 #### Update Trip
 
-```http
-PUT /api/trips/:id
 ```
+PUT /api/trips/[tripId]
+```
+
+Updates a trip's details. Only the trip owner can update.
 
 Request Body:
 
 ```json
 {
-  "name": "string (optional)",
-  "start_date": "string (YYYY-MM-DD) (optional)",
-  "end_date": "string (YYYY-MM-DD) (optional)",
-  "group_code": "string (optional)"
+  "name": "Updated Name",
+  "start_date": "2024-03-02",
+  "end_date": "2024-03-16"
 }
 ```
 
-Response:
-
-- 200 OK: Returns updated trip
-- 400 Bad Request: Invalid input
-- 401 Unauthorized: Invalid token
-- 403 Forbidden: Not trip owner
-- 404 Not Found: Trip not found
-- 500 Internal Server Error: Server error
+Response: Updated trip object
 
 #### Delete Trip
 
-```http
-DELETE /api/trips/:id
 ```
+DELETE /api/trips/[tripId]
+```
+
+Deletes a trip and all associated data. Only the trip owner can delete.
 
 Response:
 
-- 200 OK: Trip deleted successfully
-- 401 Unauthorized: Invalid token
-- 403 Forbidden: Not trip owner
-- 404 Not Found: Trip not found
-- 500 Internal Server Error: Server error
-
-#### Join Trip
-
-```http
-POST /api/trips/join
+```json
+{
+  "success": true
+}
 ```
+
+### Trip Members
+
+#### List Members
+
+```
+GET /api/trips/[tripId]/members
+```
+
+Returns a list of all members in a trip.
+
+Response:
+
+```json
+[
+  {
+    "id": "member123",
+    "trip_id": "trip123",
+    "user_id": "user123",
+    "role": "owner",
+    "joined_at": 1709251200000,
+    "user": {
+      "name": "John Doe",
+      "email": "john@example.com",
+      "avatarUrl": "https://..."
+    }
+  }
+]
+```
+
+#### Add Member
+
+```
+POST /api/trips/[tripId]/members
+```
+
+Adds a new member to the trip.
 
 Request Body:
 
 ```json
 {
-  "group_code": "string"
+  "memberId": "user456",
+  "role": "member"
 }
 ```
 
-Response:
+Response: Created member object
 
-- 200 OK: Returns trip details
-- 400 Bad Request: Invalid group code
-- 401 Unauthorized: Invalid token
-- 500 Internal Server Error: Server error
+#### Remove Member
 
-#### Get Trip Members
-
-```http
-GET /api/trips/:id/members
 ```
+DELETE /api/trips/[tripId]/members?memberId=user456
+```
+
+Removes a member from the trip. Only the trip owner can remove members.
 
 Response:
 
-- 200 OK: Returns array of members
-- 401 Unauthorized: Invalid token
-- 404 Not Found: Trip not found
-- 500 Internal Server Error: Server error
-
-### Checkpoints
-
-#### Create Checkpoint
-
-```http
-POST /api/trips/:id/checkpoints
+```json
+{
+  "success": true
+}
 ```
+
+### Packing Categories
+
+#### List Categories
+
+```
+GET /api/trips/[tripId]/packing/categories
+```
+
+Returns all packing categories for a trip.
+
+Response:
+
+```json
+[
+  {
+    "id": "cat123",
+    "trip_id": "trip123",
+    "title": "Clothing",
+    "order": 1,
+    "created_at": 1709251200000,
+    "created_by": "user123"
+  }
+]
+```
+
+#### Create Category
+
+```
+POST /api/trips/[tripId]/packing/categories
+```
+
+Creates a new packing category.
 
 Request Body:
 
 ```json
 {
-  "title": "string",
-  "type": "string",
-  "description": "string (optional)"
+  "title": "Documents",
+  "order": 2
 }
 ```
 
-Response:
+Response: Created category object
 
-- 201 Created: Returns created checkpoint
-- 400 Bad Request: Missing required fields
-- 401 Unauthorized: Invalid token
-- 403 Forbidden: Not trip member
-- 404 Not Found: Trip not found
-- 500 Internal Server Error: Server error
+#### Update Category
 
-#### Toggle Checkpoint Completion
-
-```http
-PUT /api/checkpoints/:id/complete
 ```
+PUT /api/trips/[tripId]/packing/categories/[categoryId]
+```
+
+Updates a packing category.
 
 Request Body:
 
 ```json
 {
-  "completed": "boolean"
+  "title": "Updated Title",
+  "order": 3
 }
 ```
 
+Response: Updated category object
+
+#### Delete Category
+
+```
+DELETE /api/trips/[tripId]/packing/categories/[categoryId]
+```
+
+Deletes a packing category and all its items.
+
 Response:
 
-- 200 OK: Returns updated checkpoint
-- 400 Bad Request: Invalid input
-- 401 Unauthorized: Invalid token
-- 403 Forbidden: Not trip member
-- 404 Not Found: Checkpoint not found
-- 500 Internal Server Error: Server error
+```json
+{
+  "success": true
+}
+```
 
 ### Packing Items
 
-#### Add Packing Item
+#### List Items
 
-```http
-POST /api/trips/:id/packing
 ```
+GET /api/trips/[tripId]/packing/categories/[categoryId]/items
+```
+
+Returns all items in a category.
+
+Response:
+
+```json
+[
+  {
+    "id": "item123",
+    "category_id": "cat123",
+    "name": "Ihram clothing",
+    "quantity": 2,
+    "essential": true,
+    "packed": false,
+    "created_at": 1709251200000,
+    "created_by": "user123"
+  }
+]
+```
+
+#### Create Item
+
+```
+POST /api/trips/[tripId]/packing/categories/[categoryId]/items
+```
+
+Creates a new packing item.
 
 Request Body:
 
 ```json
 {
-  "name": "string",
-  "note": "string (optional)"
+  "name": "Sunscreen",
+  "quantity": 1,
+  "essential": true
 }
 ```
 
-Response:
+Response: Created item object
 
-- 201 Created: Returns created item
-- 400 Bad Request: Missing required fields
-- 401 Unauthorized: Invalid token
-- 403 Forbidden: Not trip member
-- 404 Not Found: Trip not found
-- 500 Internal Server Error: Server error
+#### Update Item
 
-#### Toggle Item Check Status
-
-```http
-PUT /api/packing/:id/check
 ```
+PUT /api/trips/[tripId]/packing/categories/[categoryId]/items/[itemId]
+```
+
+Updates a packing item.
 
 Request Body:
 
 ```json
 {
-  "checked": "boolean"
+  "name": "Updated Name",
+  "quantity": 2,
+  "essential": false
+}
+```
+
+Response: Updated item object
+
+#### Toggle Item Packed Status
+
+```
+PUT /api/trips/[tripId]/packing/categories/[categoryId]/items/[itemId]/toggle
+```
+
+Toggles the packed status of an item.
+
+Request Body:
+
+```json
+{
+  "packed": true
+}
+```
+
+Response: Updated item object
+
+#### Delete Item
+
+```
+DELETE /api/trips/[tripId]/packing/categories/[categoryId]/items/[itemId]
+```
+
+Deletes a packing item.
+
+Response:
+
+```json
+{
+  "success": true
+}
+```
+
+### Packing Progress
+
+#### Get Progress
+
+```
+GET /api/trips/[tripId]/packing/progress
+```
+
+Returns packing progress summary.
+
+Response:
+
+```json
+{
+  "total_items": 10,
+  "packed_items": 4,
+  "percentage": 40,
+  "by_category": [
+    {
+      "category": "Documents",
+      "packed": 2,
+      "total": 2
+    },
+    {
+      "category": "Clothing",
+      "packed": 0,
+      "total": 3
+    }
+  ]
+}
+```
+
+### Rituals
+
+#### List Rituals
+
+```
+GET /api/trips/[tripId]/rituals
+```
+
+Returns all rituals for a trip.
+
+Response:
+
+```json
+[
+  {
+    "id": "ritual123",
+    "trip_id": "trip123",
+    "title": "Umrah Rituals",
+    "description": "Steps for performing Umrah",
+    "order": 1,
+    "created_at": 1709251200000,
+    "created_by": "user123"
+  }
+]
+```
+
+#### Create Ritual
+
+```
+POST /api/trips/[tripId]/rituals
+```
+
+Creates a new ritual.
+
+Request Body:
+
+```json
+{
+  "title": "Hajj Rituals",
+  "description": "Steps for performing Hajj",
+  "order": 2
+}
+```
+
+Response: Created ritual object
+
+### Ritual Steps
+
+#### List Steps
+
+```
+GET /api/trips/[tripId]/rituals/steps?ritualId=ritual123
+```
+
+Returns all steps for a ritual.
+
+Response:
+
+```json
+[
+  {
+    "id": "step123",
+    "ritual_id": "ritual123",
+    "title": "Enter Ihram",
+    "type": "action",
+    "completed": false,
+    "order": 1,
+    "created_at": 1709251200000,
+    "created_by": "user123"
+  }
+]
+```
+
+#### Create Step
+
+```
+POST /api/trips/[tripId]/rituals/steps?ritualId=ritual123
+```
+
+Creates a new ritual step.
+
+Request Body:
+
+```json
+{
+  "title": "Perform Tawaf",
+  "type": "action",
+  "order": 2
+}
+```
+
+Response: Created step object
+
+#### Update Step Completion
+
+```
+PUT /api/trips/[tripId]/rituals/steps
+```
+
+Updates a step's completion status.
+
+Request Body:
+
+```json
+{
+  "stepId": "step123",
+  "completed": true
+}
+```
+
+Response: Updated step object
+
+#### Delete Step
+
+```
+DELETE /api/trips/[tripId]/rituals/steps
+```
+
+Deletes a ritual step.
+
+Request Body:
+
+```json
+{
+  "stepId": "step123"
 }
 ```
 
 Response:
 
-- 200 OK: Returns updated item
-- 400 Bad Request: Invalid input
-- 401 Unauthorized: Invalid token
-- 403 Forbidden: Not trip member
-- 404 Not Found: Item not found
-- 500 Internal Server Error: Server error
-
-#### Delete Packing Item
-
-```http
-DELETE /api/packing/:id
+```json
+{
+  "success": true
+}
 ```
-
-Response:
-
-- 200 OK: Item deleted successfully
-- 401 Unauthorized: Invalid token
-- 403 Forbidden: Not trip member
-- 404 Not Found: Item not found
-- 500 Internal Server Error: Server error
 
 ## Error Responses
 
-All error responses follow this format:
+All endpoints may return the following error responses:
+
+### 400 Bad Request
 
 ```json
 {
-  "error": "Error message description"
+  "error": "Missing required fields"
 }
 ```
 
-Common HTTP Status Codes:
+### 401 Unauthorized
 
-- 200: Success
-- 201: Created
-- 400: Bad Request
-- 401: Unauthorized
-- 403: Forbidden
-- 404: Not Found
-- 500: Internal Server Error
+```json
+{
+  "error": "Unauthorized"
+}
+```
 
-## Rate Limiting
+### 403 Forbidden
 
-The API implements rate limiting to ensure fair usage. Rate limits are:
+```json
+{
+  "error": "Not authorized to perform this action"
+}
+```
 
-- 100 requests per minute per IP address
-- 1000 requests per hour per IP address
+### 404 Not Found
 
-## Support
+```json
+{
+  "error": "Resource not found"
+}
+```
 
-For support or questions, please open an issue in the GitHub repository.
+### 500 Internal Server Error
+
+```json
+{
+  "error": "Failed to perform operation"
+}
+```
+
+## Common Error Messages
+
+- "Trip not found"
+- "Not a member of this trip"
+- "Only trip owner can perform this action"
+- "Category not found"
+- "Item not found"
+- "Ritual not found"
+- "Step not found"
+- "Missing required fields"
+- "Not authorized"

@@ -34,6 +34,15 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
+
+  // Configure webpack
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@": ".",
+    };
+    return config;
+  },
 };
 
 export default nextConfig;

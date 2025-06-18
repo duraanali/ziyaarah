@@ -9,16 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "14.1.0",
-    "convex": "^1.10.0",
-    "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5"
+    "convex": "^1.10.0",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.2",
+    "next": "14.1.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.0.0",
+    "@types/node": "24.0.3",
+    "@types/react": "19.1.8",
     "eslint": "^8.56.0",
-    "eslint-config-next": "14.1.0",
-    "@eslint/eslintrc": "^3.0.0"
+    "eslint-config-next": "14.1.0"
   },
   "engines": {
     "node": ">=18.0.0"

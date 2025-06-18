@@ -19,14 +19,50 @@ export default defineSchema({
     created_by: v.string(),
   }).index("by_creator", ["created_by"]),
 
-  packing_items: defineTable({
+  trip_stages: defineTable({
     trip_id: v.string(),
-    name: v.string(),
-    note: v.optional(v.string()),
-    checked: v.boolean(),
-    created_by: v.string(),
+    title: v.string(),
+    description: v.string(),
+    order: v.number(),
     created_at: v.number(),
   }).index("by_trip", ["trip_id"]),
+
+  rituals: defineTable({
+    trip_id: v.string(),
+    title: v.string(),
+    description: v.string(),
+    order: v.number(),
+    created_at: v.number(),
+    created_by: v.string(),
+  }).index("by_trip", ["trip_id"]),
+
+  ritual_steps: defineTable({
+    ritual_id: v.string(),
+    title: v.string(),
+    type: v.string(),
+    completed: v.boolean(),
+    order: v.number(),
+    created_at: v.number(),
+    created_by: v.string(),
+  }).index("by_ritual", ["ritual_id"]),
+
+  packing_categories: defineTable({
+    trip_id: v.string(),
+    title: v.string(),
+    order: v.number(),
+    created_at: v.number(),
+    created_by: v.string(),
+  }).index("by_trip", ["trip_id"]),
+
+  packing_items: defineTable({
+    category_id: v.string(),
+    name: v.string(),
+    quantity: v.optional(v.number()),
+    essential: v.boolean(),
+    packed: v.boolean(),
+    created_at: v.number(),
+    created_by: v.string(),
+  }).index("by_category", ["category_id"]),
 
   checkpoints: defineTable({
     trip_id: v.string(),

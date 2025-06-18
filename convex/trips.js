@@ -61,7 +61,7 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
-    id: v.string(),
+    tripId: v.string(),
     name: v.optional(v.string()),
     start_date: v.optional(v.string()),
     end_date: v.optional(v.string()),
@@ -69,10 +69,10 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     try {
-      console.log("Updating trip:", args.id);
+      console.log("Updating trip:", args.tripId);
 
       // Get the trip
-      const trip = await ctx.db.get(args.id);
+      const trip = await ctx.db.get(args.tripId);
       if (!trip) {
         throw new ConvexError("Trip not found");
       }
@@ -80,7 +80,7 @@ export const update = mutation({
       // Check if user is the owner
       const membership = await ctx.db
         .query("trip_members")
-        .withIndex("by_trip", (q) => q.eq("trip_id", args.id))
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
         .filter((q) => q.eq(q.field("user_id"), trip.created_by))
         .first();
 
@@ -95,7 +95,7 @@ export const update = mutation({
       if (args.end_date) updates.end_date = args.end_date;
       if (args.group_code !== undefined) updates.group_code = args.group_code;
 
-      await ctx.db.patch(args.id, updates);
+      await ctx.db.patch(args.tripId, updates);
       return { success: true };
     } catch (error) {
       console.error("Error in update trip mutation:", error);
@@ -105,13 +105,13 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.string() },
+  args: { tripId: v.string() },
   handler: async (ctx, args) => {
     try {
-      console.log("Deleting trip:", args.id);
+      console.log("Deleting trip:", args.tripId);
 
       // Get the trip
-      const trip = await ctx.db.get(args.id);
+      const trip = await ctx.db.get(args.tripId);
       if (!trip) {
         throw new ConvexError("Trip not found");
       }
@@ -119,7 +119,7 @@ export const remove = mutation({
       // Check if user is the owner
       const membership = await ctx.db
         .query("trip_members")
-        .withIndex("by_trip", (q) => q.eq("trip_id", args.id))
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
         .filter((q) => q.eq(q.field("user_id"), trip.created_by))
         .first();
 
@@ -131,7 +131,7 @@ export const remove = mutation({
       // 1. Delete trip members
       const members = await ctx.db
         .query("trip_members")
-        .withIndex("by_trip", (q) => q.eq("trip_id", args.id))
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
         .collect();
 
       for (const member of members) {
@@ -141,7 +141,7 @@ export const remove = mutation({
       // 2. Delete packing items
       const packingItems = await ctx.db
         .query("packing_items")
-        .withIndex("by_trip", (q) => q.eq("trip_id", args.id))
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
         .collect();
 
       for (const item of packingItems) {
@@ -151,7 +151,7 @@ export const remove = mutation({
       // 3. Delete checkpoints
       const checkpoints = await ctx.db
         .query("checkpoints")
-        .withIndex("by_trip", (q) => q.eq("trip_id", args.id))
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
         .collect();
 
       for (const checkpoint of checkpoints) {
@@ -159,7 +159,7 @@ export const remove = mutation({
       }
 
       // 4. Finally, delete the trip
-      await ctx.db.delete(args.id);
+      await ctx.db.delete(args.tripId);
 
       return { success: true };
     } catch (error) {
@@ -196,13 +196,13 @@ export const list = query({
 });
 
 export const getById = query({
-  args: { id: v.string() },
+  args: { tripId: v.string() },
   handler: async (ctx, args) => {
     try {
-      console.log("Getting trip by ID:", args.id);
+      console.log("Getting trip by ID:", args.tripId);
 
       // Get trip details
-      const trip = await ctx.db.get(args.id);
+      const trip = await ctx.db.get(args.tripId);
       if (!trip) {
         throw new ConvexError("Trip not found");
       }
@@ -210,19 +210,19 @@ export const getById = query({
       // Get packing items
       const packingItems = await ctx.db
         .query("packing_items")
-        .withIndex("by_trip", (q) => q.eq("trip_id", args.id))
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
         .collect();
 
       // Get checkpoints
       const checkpoints = await ctx.db
         .query("checkpoints")
-        .withIndex("by_trip", (q) => q.eq("trip_id", args.id))
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
         .collect();
 
       // Get members
       const members = await ctx.db
         .query("trip_members")
-        .withIndex("by_trip", (q) => q.eq("trip_id", args.id))
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
         .collect();
 
       // Get member details
@@ -302,6 +302,169 @@ export const joinByCode = mutation({
       return trip._id;
     } catch (error) {
       console.error("Error in joinByCode mutation:", error);
+      throw error;
+    }
+  },
+});
+
+export const getMembers = query({
+  args: { tripId: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      console.log("Getting members for trip:", args.tripId);
+
+      // Get the trip
+      const trip = await ctx.db.get(args.tripId);
+      if (!trip) {
+        throw new ConvexError("Trip not found");
+      }
+
+      // Get all members for the trip
+      const members = await ctx.db
+        .query("trip_members")
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
+        .collect();
+
+      // Get user details for each member
+      const membersWithDetails = await Promise.all(
+        members.map(async (member) => {
+          const user = await ctx.db
+            .query("users")
+            .withIndex("by_email", (q) => q.eq("email", member.user_id))
+            .first();
+          return {
+            ...member,
+            user: user
+              ? {
+                  name: user.name,
+                  email: user.email,
+                  avatarUrl: user.avatarUrl,
+                }
+              : null,
+          };
+        })
+      );
+
+      return membersWithDetails;
+    } catch (error) {
+      console.error("Error in getMembers query:", error);
+      throw error;
+    }
+  },
+});
+
+export const addMember = mutation({
+  args: {
+    tripId: v.string(),
+    memberId: v.string(),
+    role: v.string(),
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    try {
+      console.log("Adding member to trip:", {
+        tripId: args.tripId,
+        memberId: args.memberId,
+        role: args.role,
+        userId: args.userId,
+      });
+
+      // Get the trip
+      const trip = await ctx.db.get(args.tripId);
+      if (!trip) {
+        throw new ConvexError("Trip not found");
+      }
+
+      // Verify the requesting user is a member of the trip
+      const requesterMembership = await ctx.db
+        .query("trip_members")
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
+        .filter((q) => q.eq(q.field("user_id"), args.userId))
+        .first();
+
+      if (!requesterMembership) {
+        throw new ConvexError("Not authorized");
+      }
+
+      // Check if the new member is already a member
+      const existingMembership = await ctx.db
+        .query("trip_members")
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
+        .filter((q) => q.eq(q.field("user_id"), args.memberId))
+        .first();
+
+      if (existingMembership) {
+        throw new ConvexError("User is already a member of this trip");
+      }
+
+      // Add the new member
+      const memberId = await ctx.db.insert("trip_members", {
+        trip_id: args.tripId,
+        user_id: args.memberId,
+        role: args.role,
+        joined_at: Date.now(),
+      });
+
+      return await ctx.db.get(memberId);
+    } catch (error) {
+      console.error("Error in addMember mutation:", error);
+      throw error;
+    }
+  },
+});
+
+export const removeMember = mutation({
+  args: {
+    tripId: v.string(),
+    memberId: v.string(),
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    try {
+      console.log("Removing member from trip:", {
+        tripId: args.tripId,
+        memberId: args.memberId,
+        userId: args.userId,
+      });
+
+      // Get the trip
+      const trip = await ctx.db.get(args.tripId);
+      if (!trip) {
+        throw new ConvexError("Trip not found");
+      }
+
+      // Verify the requesting user is the trip owner
+      const requesterMembership = await ctx.db
+        .query("trip_members")
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
+        .filter((q) => q.eq(q.field("user_id"), args.userId))
+        .first();
+
+      if (!requesterMembership || requesterMembership.role !== "owner") {
+        throw new ConvexError("Not authorized");
+      }
+
+      // Find the member to remove
+      const memberToRemove = await ctx.db
+        .query("trip_members")
+        .withIndex("by_trip", (q) => q.eq("trip_id", args.tripId))
+        .filter((q) => q.eq(q.field("user_id"), args.memberId))
+        .first();
+
+      if (!memberToRemove) {
+        throw new ConvexError("Member not found");
+      }
+
+      // Don't allow removing the owner
+      if (memberToRemove.role === "owner") {
+        throw new ConvexError("Cannot remove trip owner");
+      }
+
+      // Remove the member
+      await ctx.db.delete(memberToRemove._id);
+      return { success: true };
+    } catch (error) {
+      console.error("Error in removeMember mutation:", error);
       throw error;
     }
   },
