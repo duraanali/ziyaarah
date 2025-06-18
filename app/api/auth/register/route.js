@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { name, email, password } = body;
+    const { name, email, password } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -18,43 +15,25 @@ export async function POST(req) {
       );
     }
 
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
-
-    // Check if user exists
+    // Check if user already exists
     const existingUser = await convex.query(api.users.getByEmail, { email });
     if (existingUser) {
       return NextResponse.json(
-        { error: "Email already registered" },
-        { status: 400 }
+        { error: "Email already exists" },
+        { status: 409 }
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const userId = await convex.mutation(api.users.create, {
+    // Clerk handles the actual user creation
+    // We just need to create the user in our database
+    const user = await convex.mutation(api.users.create, {
       name,
       email,
-      password: hashedPassword,
-      created_at: Date.now(),
     });
 
-    // Generate JWT
-    const token = jwt.sign({ id: userId, email }, JWT_SECRET);
-
-    return NextResponse.json({
-      token,
-      user: {
-        id: userId,
-        name,
-        email,
-      },
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("Registration error:", error);
+    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
   }
 }
