@@ -457,6 +457,55 @@ Response:
 
 ### Rituals
 
+#### Get All Trips with Rituals
+
+```
+GET /api/trips/with-rituals
+```
+
+Returns all trips for the current user along with their rituals and ritual steps.
+
+Response:
+
+```json
+[
+  {
+    "_id": "trip123",
+    "name": "Umrah Trip",
+    "start_date": "2024-01-01",
+    "end_date": "2024-01-10",
+    "created_at": 1709251200000,
+    "created_by": "user123",
+    "group_code": "ABC123",
+    "rituals": [
+      {
+        "ritual": {
+          "_id": "ritual123",
+          "trip_id": "trip123",
+          "title": "Umrah Rituals",
+          "description": "Steps for performing Umrah",
+          "order": 1,
+          "created_at": 1709251200000,
+          "created_by": "user123"
+        },
+        "steps": [
+          {
+            "_id": "step123",
+            "ritual_id": "ritual123",
+            "title": "Enter Ihram",
+            "type": "action",
+            "completed": false,
+            "order": 1,
+            "created_at": 1709251200000,
+            "created_by": "user123"
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
 #### List Rituals
 
 ```
