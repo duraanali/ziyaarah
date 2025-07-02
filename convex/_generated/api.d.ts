@@ -16,6 +16,7 @@ import type {
 import type * as checkpoints from "../checkpoints.js";
 import type * as config from "../config.js";
 import type * as packing from "../packing.js";
+import type * as resources from "../resources.js";
 import type * as ritualSteps from "../ritualSteps.js";
 import type * as rituals from "../rituals.js";
 import type * as tripStages from "../tripStages.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   checkpoints: typeof checkpoints;
   config: typeof config;
   packing: typeof packing;
+  resources: typeof resources;
   ritualSteps: typeof ritualSteps;
   rituals: typeof rituals;
   tripStages: typeof tripStages;

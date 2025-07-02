@@ -82,4 +82,24 @@ export default defineSchema({
   })
     .index("by_trip", ["trip_id"])
     .index("by_user", ["user_id"]),
+
+  resources: defineTable({
+    title: v.string(),
+    type: v.string(), // "article", "video", "link", "pdf"
+    category: v.string(), // "Preparation", "Ritual Guide", "Health & Safety", "Duas", etc.
+    description: v.string(),
+    content_url: v.string(),
+    thumbnail: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    created_at: v.number(),
+    is_public: v.boolean(),
+  }).index("by_category", ["category"]),
+
+  resource_bookmarks: defineTable({
+    user_id: v.string(),
+    resource_id: v.string(),
+    created_at: v.number(),
+  })
+    .index("by_user", ["user_id"])
+    .index("by_resource", ["resource_id"]),
 });

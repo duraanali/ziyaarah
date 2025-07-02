@@ -640,6 +640,159 @@ Response:
 }
 ```
 
+### Resources
+
+#### List Resources
+
+```
+GET /api/resources
+```
+
+Returns all public resources with optional filtering.
+
+Query Parameters (optional):
+
+- `category`: Filter by category (e.g., "Preparation", "Ritual Guide", "Health & Safety", "Duas")
+- `type`: Filter by type (e.g., "article", "video", "link", "pdf")
+- `search`: Search in title, description, and tags
+
+Response:
+
+```json
+[
+  {
+    "_id": "rsc1",
+    "title": "How to Wear Ihram",
+    "type": "video",
+    "category": "Preparation",
+    "description": "Step-by-step guide on Ihram clothing.",
+    "content_url": "https://youtube.com/watch?v=123",
+    "thumbnail": "https://ziyaarah.app/images/ihram.jpg",
+    "tags": ["Ihram", "Clothing"],
+    "created_at": 1720000000,
+    "is_public": true
+  }
+]
+```
+
+#### Get Resource
+
+```
+GET /api/resources/[id]
+```
+
+Returns full details of a single resource.
+
+Response: Full resource object
+
+#### Create Resource
+
+```
+POST /api/resources
+```
+
+Creates a new resource (Admin only).
+
+Request Body:
+
+```json
+{
+  "title": "Printable Packing Checklist",
+  "type": "pdf",
+  "category": "Preparation",
+  "description": "Downloadable checklist before your journey.",
+  "content_url": "https://ziyaarah.app/files/packing-checklist.pdf",
+  "thumbnail": "https://ziyaarah.app/images/checklist.png",
+  "tags": ["Packing", "Checklist"],
+  "is_public": true
+}
+```
+
+Response: Created resource object
+
+#### Update Resource
+
+```
+PUT /api/resources/[id]
+```
+
+Updates resource information (Admin only).
+
+Request Body: Any combination of resource fields
+
+Response: Updated resource object
+
+#### Delete Resource
+
+```
+DELETE /api/resources/[id]
+```
+
+Removes a resource (Admin only).
+
+Response:
+
+```json
+{
+  "success": true
+}
+```
+
+### Bookmarks
+
+#### Bookmark Resource
+
+```
+POST /api/resources/[id]/bookmark
+```
+
+Saves a resource for later (Auth required).
+
+Response: Created bookmark object
+
+#### Remove Bookmark
+
+```
+DELETE /api/resources/[id]/bookmark
+```
+
+Removes a saved bookmark (Auth required).
+
+Response:
+
+```json
+{
+  "success": true
+}
+```
+
+#### List Bookmarks
+
+```
+GET /api/bookmarks
+```
+
+Returns all bookmarked resources for the current user (Auth required).
+
+Response:
+
+```json
+[
+  {
+    "_id": "rsc1",
+    "title": "How to Wear Ihram",
+    "type": "video",
+    "category": "Preparation",
+    "description": "Step-by-step guide on Ihram clothing.",
+    "content_url": "https://youtube.com/watch?v=123",
+    "thumbnail": "https://ziyaarah.app/images/ihram.jpg",
+    "tags": ["Ihram", "Clothing"],
+    "created_at": 1720000000,
+    "is_public": true
+  }
+]
+```
+
 ## Error Responses
 
 All endpoints may return the following error responses:
@@ -693,5 +846,8 @@ All endpoints may return the following error responses:
 - "Item not found"
 - "Ritual not found"
 - "Step not found"
+- "Resource not found"
+- "Resource already bookmarked"
+- "Bookmark not found"
 - "Missing required fields"
 - "Not authorized"
